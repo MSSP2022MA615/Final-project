@@ -1,0 +1,73 @@
+---
+title: "gtfs"
+author: "Hao He"
+date: "2022-12-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(vroom)
+library(tidyverse)
+```
+
+Load data from 2022-09-14 to 2022-09-21
+```{r}
+# feed start from 20220914 to 20220915
+
+sep14_agency <- vroom("20220914_agency.txt")
+sep14_calendar_attributes <- vroom("20220914_calendar_attributes.txt")
+sep14_calendar_dates <- vroom("20220914_calendar_dates.txt")
+sep14_calendar <- vroom("20220914_calendar.txt")
+sep14_checkpoints <- vroom("20220914_checkpoints.txt")
+sep14_directions<- vroom("20220914_directions.txt")
+sep14_facilities_properties_definitions<-vroom("20220914_facilities_properties_definitions.txt")
+sep14_facilities_properties<- vroom("20220914_facilities_properties.txt")
+sep14_facilities<- vroom("20220914_facilities.txt")
+sep14_feed_info<- vroom("20220914_feed_info.txt")
+sep14_levels <- vroom("20220914_levels.txt")
+sep14_lines <- vroom("20220914_lines.txt")
+sep14_linked_datasets<- vroom("20220914_linked_datasets.txt")
+sep14_multi_route_trips<- vroom("20220914_multi_route_trips.txt")
+sep14_pathways <- vroom("20220914_pathways.txt")
+sep14_route_patterns<- vroom("20220914_route_patterns.txt")
+sep14_routes <- vroom("20220914_routes.txt")
+sep14_shapes <- vroom("20220914_shapes.txt")
+sep14_stop_times<- vroom("20220914_stop_times.txt")
+sep14_stops <- vroom("20220914_stops.txt")
+sep14_transfers <- vroom("20220914_transfers.txt")
+sep14_trips<- vroom("20220914_trips.txt")
+
+
+
+# feed start from 20220916 to 20220921
+sep16_agency <- vroom("20220916_agency.txt")
+sep16_calendar_attributes <- vroom("20220916_calendar_attributes.txt")
+sep16_calendar_dates <- vroom("20220916_calendar_dates.txt")
+sep16_calendar <- vroom("20220916_calendar.txt")
+sep16_checkpoints <- vroom("20220916_checkpoints.txt")
+sep16_directions<- vroom("20220916_directions.txt")
+sep16_facilities_properties_definitions<-vroom("20220916_facilities_properties_definitions.txt")
+sep16_facilities_properties<- vroom("20220916_facilities_properties.txt")
+sep16_facilities<- vroom("20220916_facilities.txt")
+sep16_feed_info<- vroom("20220916_feed_info.txt")
+sep16_levels <- vroom("20220916_levels.txt")
+sep16_lines <- vroom("20220916_lines.txt")
+sep16_linked_datasets<- vroom("20220916_linked_datasets.txt")
+sep16_multi_route_trips<- vroom("20220916_multi_route_trips.txt")
+sep16_pathways <- vroom("20220916_pathways.txt")
+sep16_route_patterns<- vroom("20220916_route_patterns.txt")
+sep16_routes <- vroom("20220916_routes.txt")
+sep16_shapes <- vroom("20220916_shapes.txt")
+sep16_stop_times<- vroom("20220916_stop_times.txt")
+sep16_stops <- vroom("20220916_stops.txt")
+sep16_transfers <- vroom("20220916_transfers.txt")
+sep16_trips<- vroom("20220916_trips.txt")
+
+
+
+
+
+
+```
+
