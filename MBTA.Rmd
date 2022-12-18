@@ -167,7 +167,7 @@ may_stop_coor<- may_stops_merge %>% select(stop_id,stop_lat,stop_lon,stop_name) 
 
 # check non-numeric stop_id
 x_test <- as.numeric(may_stop_coor$stop_id)
-non_numeric_stopid<- may_stop_coor[is.na(x_test)] %>% distinct(stop_id)
+non_numeric_stopid<- may_stop_coor[is.na(x_test),] %>% distinct(stop_id)
 
 stop_coor<- may_stop_coor %>% filter(!stop_id %in% non_numeric_stopid$stop_id)
 
