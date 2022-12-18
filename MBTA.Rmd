@@ -24,30 +24,30 @@ library(tibble)
 
 In this report, the historical record of MBTA transit services from the MBTA blue book open data portal and the archive is analyzed to figure out any pattern (or distribution) on travel times for different category of MBTA transit given the same stop pairs and therefore provide insights to MBTA riders about whether the estimated time and routes are reliable.
 
-
-For the time period of MBTA services, I picked the 14th - 21th days from each of the month from November 2021 to October 2022, as I think the schedule may remain unchanged  at the most of time in the middle of the month. 
+For the time period of MBTA services, I picked the 14th - 21th days from each of the month from November 2021 to October 2022, as I think the schedule may remain unchanged at the most of time in the middle of the month.
 
 Below are some terminologies that would be helpful to understand the data:
 
--   `Stops` are associated with `trips`. A stop for any type of transit services is usually unchanged unless exception such as holiday occurs. Stops in the documentation could be numeric or combined with character, such as BNT-0000, or even complete in character, like Boat-Charlestown.	
+-   `Stops` are associated with `trips`. A stop for any type of transit services is usually unchanged unless exception such as holiday occurs. Stops in the documentation could be numeric or combined with character, such as BNT-0000, or even complete in character, like Boat-Charlestown.
 
 -   `Trip` consists of several stops. Each trip refers to a single "run" of a vehicle along a particular route. In a route, a vehicle may not serve every one of its stops at all times. For example, on weekends it might skip several stops if there is a construction or a holiday event.
 
 ```{r may2022, include=FALSE}
 ## May 2022 no changes of service during this week
 ## feed from 0514 to 0521
-may_listfile <- list.files("/Users/hao/Documents/MA 615/Final project/MBTA/data/2022 may",pattern = "txt",full.names = T, recursive = T)
+# may_listfile <- list.files("/Users/hao/Documents/MA 615/Final project/MBTA/data/2022 may",pattern = "txt",full.names = T, recursive = T)
 
-may_calendar_dates <- fread(may_listfile[3]) # useful for service modification
-may_calendar <- fread(may_listfile[4]) # unique service_id
-may_directions<- fread(may_listfile[6])
-may_lines <- fread(may_listfile[12])
-may_routes <- fread(may_listfile[17])
-may_shapes <- fread(may_listfile[18]) # draw points
-may_stop_times <- fread(may_listfile[19])
-may_stops <- fread(may_listfile[20])
-may_transfers <- fread(may_listfile[21]) # has transfer_time info
-may_trips<- fread(may_listfile[22])
+# 
+may_calendar_dates <- fread("calendar_dates.txt") # useful for service modification
+may_calendar <- fread("calendar.txt") # unique service_id
+may_directions<- fread("directions.txt")
+may_lines <- fread("lines.txt")
+may_routes <- fread("routes.txt")
+may_shapes <- fread("shapes.txt") # draw points
+may_stop_times <- fread("stop_times.txt")
+may_stops <- fread("stops.txt")
+may_transfers <- fread("transfers.txt") # has transfer_time info
+may_trips<- fread("trips.txt")
 
 
 # select useful columns
@@ -73,7 +73,7 @@ may<- may_merge5 %>% distinct(trip_id,.keep_all = T)
 
 # check non-numeric stop-id in May data
 x_test <- as.numeric(may$stop_id)
-may$stop_id[is.na(x_test)]
+# may$stop_id[is.na(x_test)]
 # this helps me separate ferry info
 
 # # Orange 
@@ -114,22 +114,24 @@ CR_trips_may<- may %>% filter(route_desc == "Commuter Rail") %>% distinct(trip_i
 
 ## EDA
 
-The data I used for examine travel times for bus and rapid transit are from MBTA blue book open data portal and the the data for the rest of modes including ferry and commuter rails are extracted from the archive GTFS feed of the developer site. I looked at several distributions of travel times/headways on each category of MBTA transit. Given the schedule in May had less changes basically (except for Memorial day), most of my analysis are produced for duration between May 14th and 21th. 
+The data I used for examine travel times for bus and rapid transit are from MBTA blue book open data portal and the the data for the rest of modes including ferry and commuter rails are extracted from the archive GTFS feed of the developer site. I looked at several distributions of travel times/headways on each category of MBTA transit. Given the schedule in May had less changes basically (except for Memorial day), most of my analysis are produced for duration between May 14th and 21th.
 
 ### Bus
 
-Headway is the actual time between the trip and the previous trip at the stop, in seconds. This can be used for checking the reliability of bus service at a given stop for a trip. Since the headway can be only evaluated when using the headway standard, the missing values of headway caused by schedule standard are removed. I found silver line bus generally has more route stop pairs, thus, I narrow down to draw the distribution of the silver lines in May on for exploration.
+Headway is the actual time between the trip and the previous trip at the stop, in seconds. This can be used for checking the reliability of bus service at a given stop for a trip. Since the headway can be only evaluated when using the headway standard, the missing values of headway caused by schedule standard are removed. I found silver line bus generally has more route stop pairs, thus, I narrow down to draw the distribution of the silver lines in May on for exploration. The stop at summer street has a extremely higher travel times compared to other stops.
 
-```{r messgage = FALSE, warning=FALSE,echo=FALSE, fig.cap="Figure 1. Silver Line bus travel times", fig.show='hold', out.width="50%"}
+```{r messgage = FALSE, warning=FALSE,echo=FALSE, fig.cap="Figure 1. Silver Line bus travel times"}
 #list all the files in the folder
-bus_listfile <- list.files("/Users/hao/Documents/MA 615/Final project/MBTA/data",pattern = "csv",full.names = T, recursive = T)
-
-
-#extract the  files with folder name bus
-listfile_bus <- bus_listfile[grep("bus",bus_listfile)]
+# bus_listfile <- list.files("/Users/hao/Documents/MA 615/Final project/MBTA/data",pattern = "csv",full.names = T, recursive = T)
+# 
+# 
+# #extract the  files with folder name bus
+# listfile_bus <- bus_listfile[grep("bus",bus_listfile)]
 
 #inspect the file names
 # head(listfile_bus)
+
+### read directly
 
 # bus11 <- fread(listfile_bus[1]) %>% filter(between(service_date, as.Date("2021-11-14"), as.Date("2021-11-21"))) %>% filter(standard_type == "Headway")
 # bus12 <- fread(listfile_bus[2]) %>%  filter(between(service_date, as.Date("2021-12-14"), as.Date("2021-12-21"))) %>% filter(standard_type == "Headway")
@@ -137,7 +139,7 @@ listfile_bus <- bus_listfile[grep("bus",bus_listfile)]
 # bus02 <- fread(listfile_bus[4]) %>%  filter(between(service_date, as.Date("2022-02-14"), as.Date("2022-02-21"))) %>% filter(standard_type == "Headway")
 # bus03 <- fread(listfile_bus[5]) %>%  filter(between(service_date, as.Date("2022-03-14"), as.Date("2022-03-21"))) %>% filter(standard_type == "Headway")
 # bus04 <- fread(listfile_bus[6]) %>%  filter(between(service_date, as.Date("2022-04-14"), as.Date("2022-04-21"))) %>% filter(standard_type == "Headway")
-bus05 <- fread(listfile_bus[7]) %>%  filter(between(service_date, as.Date("2022-05-14"), as.Date("2022-05-21"))) %>% filter(standard_type == "Headway")
+bus05 <- fread("MBTA-Bus-Arrival-Departure-Times_2022-05.csv") %>%  filter(between(service_date, as.Date("2022-05-14"), as.Date("2022-05-21"))) %>% filter(standard_type == "Headway")
 # bus06 <- fread(listfile_bus[8])  %>%  filter(between(service_date, as.Date("2022-06-14"), as.Date("2022-06-21"))) %>% filter(standard_type == "Headway")
 # bus07 <- fread(listfile_bus[9]) %>%  filter(between(service_date, as.Date("2022-07-14"), as.Date("2022-07-21"))) %>% filter(standard_type == "Headway")
 # bus08 <- fread(listfile_bus[10]) %>%  filter(between(service_date, as.Date("2022-08-14"), as.Date("2022-08-21"))) %>% filter(standard_type == "Headway")
@@ -149,6 +151,7 @@ bus05 <- fread(listfile_bus[7]) %>%  filter(between(service_date, as.Date("2022-
 
 # plot headways for May 2022
 # Silver line bus 
+
 sl_routes<- bus05 %>% filter(route_id == c("SL1","SL2","SL4","SL3","SL5")) %>% na.omit()
 
 # Not a good plot, should include associated stop and create bar plot instead
@@ -180,13 +183,14 @@ sl_routes_traveltimes<- merge(sl_routes, stop_coor, by = "stop_id")
 plot_ly(data = sl_routes_traveltimes, y=~headway, color = ~route_id, type = "box") %>%
   layout(title="Box plot of silver line travel times", yaxis=list(title="Time",range=c(0,1000)))
 
-plot_ly(data = sl_routes_traveltimes, y=~headway, color = ~route_id, type = "box") %>%
+plot_ly(data = sl_routes_traveltimes, y=~headway, color = ~stop_name, type = "box") %>%
   layout(title="Box plot of silver line travel times by stop", yaxis=list(title="Time",range=c(0,1000)))
 
 
 ```
 
 Below I found that during my selected week, the exception on 20220521 causes the Saturday red line service towards Alewife be removed (1 means service added to schedule on this date, 2 means removed from schedule on this date). And why this has to be an exception is not clear, which would be good to for MBTA to show to riders otherwise this does not benefit a developer who wants to use this kind of information for prediction.
+
 ```{r fig.cap= "Table 1. exception date on May", echo = FALSE}
 
 # information about calendar modifications
@@ -197,31 +201,33 @@ may_calendar_merge %>% filter(!is.na(exception_date)) %>% select(service_id,exce
 
 ```
 
-
 ### Rapid transit
 
 ```{r, include=FALSE, message=FALSE}
 # load rapid transit travel times file from MBTA OPEN DATA portal
-rapidtransit_listfile <- list.files("/Users/hao/Documents/MA 615/Final project/MBTA/data",pattern = "csv",full.names = T, recursive = T)
+# rapidtransit_listfile <- list.files("/Users/hao/Documents/MA 615/Final project/MBTA/data",pattern = "csv",full.names = T, recursive = T)
+# 
+# listfile_rt <- rapidtransit_listfile[grep("rapid transit",rapidtransit_listfile)]
 
-listfile_rt <- rapidtransit_listfile[grep("rapid transit",rapidtransit_listfile)]
+
+# READ DIRECTLY
 # Year 2022
-HR_2022_Q1 <- fread(listfile_rt[1])
-LR_2022_Q1 <- fread(listfile_rt[2])
-HR_2022_Q2 <- fread(listfile_rt[3])
-LR_2022_Q2 <- fread(listfile_rt[4])
-HR_2022_Q3 <- fread(listfile_rt[5])
-LR_2022_Q3 <- fread(listfile_rt[6])
+HR_2022_Q1 <- fread("2022-Q1_HRTravelTimes.csv")
+LR_2022_Q1 <- fread("2022-Q1_LRTravelTimes.csv")
+HR_2022_Q2 <- fread("2022-Q2_HRTravelTimes.csv")
+LR_2022_Q2 <- fread("2022-Q2_LRTravelTimes.csv")
+HR_2022_Q3 <- fread("2022-Q3_HRTravelTimes.csv")
+LR_2022_Q3 <- fread("2022-Q3_LRTravelTimes.csv")
 
 # Year 2021
-HR_2021_Q1 <- fread(listfile_rt[7])
-LR_2021_Q1 <- fread(listfile_rt[11])
-HR_2021_Q2 <- fread(listfile_rt[8])
-LR_2021_Q2 <- fread(listfile_rt[12])
-HR_2021_Q3 <- fread(listfile_rt[9])
-LR_2021_Q3 <- fread(listfile_rt[13])
-HR_2021_Q4 <- fread(listfile_rt[10])
-LR_2021_Q4 <- fread(listfile_rt[14])
+HR_2021_Q1 <- fread("HRTravelTimesQ1_21.csv")
+LR_2021_Q1 <- fread("LRTravelTimesQ1_21.csv")
+HR_2021_Q2 <- fread("HRTravelTimesQ2_21.csv")
+LR_2021_Q2 <- fread("LRTravelTimesQ2_21.csv")
+HR_2021_Q3 <- fread("HRTravelTimesQ3_21.csv")
+LR_2021_Q3 <- fread("LRTravelTimesQ3_21.csv")
+HR_2021_Q4 <- fread("HRTravelTimesQ4_21.csv")
+LR_2021_Q4 <- fread("LRTravelTimesQ4_21.csv")
 
 
 
@@ -293,7 +299,7 @@ rapid_transit<- rbind(rt22,rt21)
 
 ```
 
-Below are the first 6 rows show the travel times for a given stop pairs along a route. Since the overlaid distribution of each line's travel times is a blur, I ploted them separately. It can seen that each line's distribution is right-skewed and the travel time in seconds is concentrated around 400 seconds or above except for Mattpan. This is not a surprise because Mattpan is actually part of the red line and it services much less stops than other subways for us to see an obvious trend. This plot also reflects that at the most of time other train seems less likely to running late compared to red line, as red line has a higher peak.
+Below are the first 6 rows show the travel times for a given stop pairs along a route. Since the overlaid distribution of each line's travel times is a blur, I ploted them separately. It can seen that each line's distribution is right-skewed and the travel time in seconds is concentrated around 400 seconds or above except for Mattpan. This is not a surprise because Mattpan is actually part of the red line and it services much less stops than other subways for us to see an obvious trend. This plot also reflects that at the most of time other train seems less likely to running late compared to red line and Green-B as they have a higher frequency around higher travel times.
 
 ```{r echo = FALSE, fig.cap= "Table 2.  Tapid transit travel times (first 6 rows)"}
 # rapid_transit$route_id %>% unique() 
@@ -305,6 +311,7 @@ rapid_transit %>% head() %>% kbl %>% kable_styling(bootstrap_options = "hover" ,
 
 ```
 
+![Figure 2. ravel time distribution by line](images/Travel%20time%20distribution%20by%20line.png)
 
 ```{r echo=FALSE, message=FALSE, fig.cap= "Figure 2. Travel time distribution by line"}
 
@@ -336,35 +343,41 @@ mattpan_routes <- rapid_transit %>% filter(route_id == "Mattapan")
 
 # overlaid histogram cannot be seen clearly
 
-p_red_routes<- plot_ly(x=~red_routes$travel_time_sec, name = "Red", type = "histogram") %>%
-  layout( xaxis=list(range=c(300,3500)))
-
-p_blue_routes<- plot_ly(x=~red_routes$travel_time_sec, name = "Red", type = "histogram") %>%
-  layout( xaxis=list(range=c(300,3500)))
-
-p_orange_routes<- plot_ly(x=~orange_routes$travel_time_sec, name = "Orange", type = "histogram") %>%
-  layout( xaxis=list(range=c(300,3500)))
-
-p_greenb_routes<- plot_ly(x=~greenb_routes$travel_time_sec, name = "Green-B", type = "histogram") %>%
-  layout( xaxis=list(range=c(300,3500)))
-
-p_greenc_routes<- plot_ly(x=~greenc_routes$travel_time_sec, name = "Green-C", type = "histogram") %>%
-  layout( xaxis=list(range=c(300,3500)))
-
-p_greend_routes<- plot_ly(x=~greend_routes$travel_time_sec, name = "Green-D", type = "histogram") %>%
-  layout( xaxis=list(range=c(300,3500)))
-
-p_greene_routes<- plot_ly(x=~greene_routes$travel_time_sec, name = "Green-E", type = "histogram") %>%
-  layout( xaxis=list(range=c(300,3500)))
-
-p_mattpan_routes<- plot_ly(x=~mattpan_routes$travel_time_sec, name = "Mattpan", type = "histogram") %>%
-  layout(xaxis=list(range=c(300,3500)))
-
-subplot(p_red_routes,p_blue_routes,p_orange_routes,p_greenb_routes, p_greenc_routes,p_greend_routes,p_greene_routes,p_mattpan_routes,nrows=4, shareY = T, titleY = T, shareX = T) %>% layout(title = " Travel time distribution by line", xaxis = list(title = "Travel time in seconds"), yaxis=list(title="Frequency"))
-
 ```
 
-To better understanding whether the travel times affected by the number of route operating for each subway line, I also made a bar chart to display the number of routes in MBTA by subway lines. Green lines generally has more routes (except for E) and red line is the subway line with the second highest number of routes. 
+```{r eval=FALSE}
+p_red_routes<- plot_ly(x=~red_routes$travel_time_sec, name = "Red", type = "histogram") %>%
+  layout( title = "Red Line Travel Times Distribution", xaxis=list(range=c(300,3500), title=" travel time in seconds"), yaxis=list(title="frequency"))
+p_red_routes
+
+p_blue_routes<- plot_ly(x=~red_routes$travel_time_sec, name = "Red", type = "histogram") %>%
+  layout( title = "Blue Line Travel Times Distribution", xaxis=list(range=c(300,3500),title= "travel time in seconds"), yaxis=list(title="frequency"))
+p_blue_routes
+
+p_orange_routes<- plot_ly(x=~orange_routes$travel_time_sec, name = "Orange", type = "histogram") %>%
+  layout(title = "Orange Line Travel Times Distribution", xaxis=list(range=c(300,3500),title= "travel time in seconds"))
+p_orange_routes
+
+p_greenb_routes<- plot_ly(x=~greenb_routes$travel_time_sec, name = "Green-B", type = "histogram") %>%layout(title = "Green-B Line Travel Times Distribution", xaxis=list(range=c(300,3500),title= "travel time in seconds"))
+
+
+p_greenc_routes<- plot_ly(x=~greenc_routes$travel_time_sec, name = "Green-C", type = "histogram") %>%layout(title = "Green-C Line Travel Times Distribution", xaxis=list(range=c(300,3500),title= "travel time in seconds"))
+p_greenc_routes
+
+
+p_greend_routes<- plot_ly(x=~greend_routes$travel_time_sec, name = "Green-D", type = "histogram")%>%layout(title = "Green-D Line Travel Times Distribution", xaxis=list(range=c(300,3500),title= "travel time in seconds"))
+p_greend_routes
+
+
+p_greene_routes<- plot_ly(x=~greene_routes$travel_time_sec, name = "Green-E", type = "histogram") %>%layout(title = "Green-E Line Travel Times Distribution", xaxis=list(range=c(300,3500),title= "travel time in seconds"))
+p_greene_routes
+
+
+p_mattpan_routes<- plot_ly(x=~mattpan_routes$travel_time_sec, name = "Mattpan", type = "histogram") %>%layout(title = "Mattpan Line Travel Times Distribution", xaxis=list(range=c(300,3500),title= "travel time in seconds"))
+p_mattpan_routes
+```
+
+To better understanding whether the travel times affected by the number of route operating for each subway line, I also made a bar chart to display the number of routes in MBTA by subway lines. Green lines generally has more routes (except for E) and red line is the subway line with the second highest number of routes.
 
 ```{r echo=FALSE, fig.cap="Figure 3. Number of routes in MBTA by subway lines"}
 routes_by_line <- rapid_transit%>% group_by(route_id) %>%distinct(from_stop_id,to_stop_id,.keep_all = T) %>% count()
@@ -383,7 +396,7 @@ routes_by_line_plot
 
 I used to live in Quincy for 3 years and the travel time from North Quincy station is usually pretty long from my experience, here I focused more on analyze Red Line's travel times and its performance compared to orange line because both of them are either northbound or southbound. Based on the density plots of red line, the stop around Quincy area overall has a higher probability of having a higher travel time regardless of the direction of the red line when compared to stops like Harvard.
 
-```{r tidy=TRUE, warning = FALSE, message = FALSE, fig.show='hold', out.width="50%",fig.cap="Figure 4. Red line travel time density plot"}
+```{r tidy=TRUE, warning = FALSE, message = FALSE,fig.cap="Figure 4. Red line travel time density plot"}
 ####RED LINE
 # match stop_lon and stop_lat
 red_routes$from_stop_id <- as.integer(red_routes$from_stop_id)
@@ -427,8 +440,9 @@ plot_ly(red_to_south_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %>%
 
 ```
 
-Below is the travel times density plot for orange line. According to the density plots, the higher concentration in travel times at a given stop is more related to its direction (depends on the southbound or northbound) which is more reasonable than the red line. 
-```{r tidy=TRUE, warning = FALSE, message = FALSE, fig.cap=" Figure 5. Orange line travel time density plot", fig.show='hold', out.width="50%"}
+Below is the travel times density plot for orange line. According to the density plots, the higher concentration in travel times at a given stop is more related to its direction (depends on the southbound or northbound) which is more reasonable than the red line.
+
+```{r tidy=TRUE, warning = FALSE, message = FALSE, fig.cap=" Figure 5. Orange line travel time density plot"}
 ##### Orange line
 # match stop_lon and stop_lat
 orange_routes$from_stop_id <- as.integer(orange_routes$from_stop_id)
@@ -475,14 +489,11 @@ plot_ly(orange_to_south_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %
 ## Conlusion
 
 Below is a summary of findings on the travel times and headways for bus and subway:
- 
-- Bus: Among all silver lines, SL5 has a lower headways than other silver line buses. So it is more likely for SL5 to 
 
-- Rapid transit: Red line has a longer travel time than orange line. This may be attributed to red line usually have longer distances between stops. 
+-   Bus: Among all silver lines, SL5 has a lower headways than other silver line buses. So it is more likely for SL5 to
+
+-   Rapid transit: Red line has a longer travel time than orange line. This may be attributed to red line usually have longer distances between stops.
 
 Since I don't have a consolidated dataset for commuter rail and ferry. I tried to took the schedule in may to represent a normal schedule for these two category of MBTA transit services.
 
-
-This report has several limitations including limited time, incomplete data and the computation capability issue. And the way I preprocessing data is also affecting the evaluation of MBTA services. Besides, without the weather information, I tried to compare the travel times in September and that in May, these aren't too much changes, so I guess this is also a shortcoming of this analysis. The confidence interval should be considered if sampling is completed or a model is fitted for prediction. For future work, I can continue digging deeper into each month's MBTA services if I have more information about the dwell time for vehicles. I can combine this with headyways and travel times to see if there are a better measurement to compared with benchmark scheduled time. With more information about how the route may change by holidays and weather, I may have a better estimate on if the train/bus will be on time.   
-
-
+This report has several limitations including limited time, incomplete data and the computation capability issue. And the way I preprocessing data is also affecting the evaluation of MBTA services. Besides, without the weather information, I tried to compare the travel times in September and that in May, these aren't too much changes, so I guess this is also a shortcoming of this analysis. The confidence interval should be considered if sampling is completed or a model is fitted for prediction. For future work, I can continue digging deeper into each month's MBTA services if I have more information about the dwell time for vehicles. I can combine this with headyways and travel times to see if there are a better measurement to compared with benchmark scheduled time. With more information about how the route may change by holidays and weather, I may have a better estimate on if the train/bus will be on time.
