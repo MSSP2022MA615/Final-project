@@ -23,5 +23,6 @@ MBTA Travel Times 2022 <br><https://mbta-massdot.opendata.arcgis.com/datasets/mb
 
 MBTA Travel Times 2021 <br><https://mbta-massdot.opendata.arcgis.com/datasets/mbta-travel-times-2021/about>
 
-# Shiny app cannot publish because of the data size, and plotly isn't working in shiny.
-# Futhure work  - continue work on this until issues solved.
+...
+Shiny app cannot publish because of the data size, and plotly isn't working in shiny.
+Futhure work  - continue work on this until issues solved.
