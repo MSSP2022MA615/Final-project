@@ -14,6 +14,7 @@ library(lubridate)
 library(DT)
 library(data.table)
 library(RColorBrewer)
+library(gepaf)
 
 ## load files for shiny
 
@@ -106,11 +107,10 @@ orange_to_south_df<- data.frame(
 ###########-------------------
 # now create shiny 
 
-# set up api_key first
-# api_key = "AIzaSyAZZEueevQyJrIRJUregAEbUC775LEfrxg"
+
 # 
 # #### Distance Matrix
-# # example: obtain a matrix of driving distance and duration between 2 locations
+#  obtain a matrix of driving distance and duration between 2 locations
 # 
 # locations = c("South Station", "Kenmore")
 # doc = mp_matrix(
@@ -147,26 +147,30 @@ ui <- fluidPage(
     "MBTA Transit Services",
     id = "main_navbar",
     theme = "cosmo",
-    tabPanel("MBTA", leafletOutput("map"),textOutput("intro"),height = 700),
+    tabPanel("MBTA", 
+             fluidRow(column(4,selectInput("Tstop1","Origin", choices = red_travel_times$dept_name, selected = NULL)),
+                    column(4,selectInput("Tstop2","Destination", choices = red_travel_times$dept_name, selected = NULL))),         
+             fluidRow(leafletOutput("map"),textOutput("intro"),height = 700))
+                 ,
     tabPanel(
       "Buses",
-      fluidRow(column(width = 3,selectInput(inputId = "stop_selected", label = "bus_stop", choices = unique(sl_routes_traveltimes$stop_name),selected = NULL))
+      fluidRow(column(width = 3,selectInput(inputId = "bus_stop", label = "bus stop", choices = unique(sl_routes_traveltimes$stop_name),selected = NULL))
                )
-      ,fluidRow(column(DTOutput("bus_table")))
+      ,fluidRow(column(width = 12, DTOutput("bus_table")))
       ),
-    tabPanel("BUS EDA",
-      # Tab: BUS
-      plotlyOutput("SLboxplot2")
-    ),
-  tabPanel("Rapid Transit EDA", 
+    tabPanel("Ferry",
+      # Tab: Ferry
+      fluidRow(column(width = 3,selectInput(inputId = "boat_stop", label = "ferry stop", choices = unique(boat_trips_may$stop_name),selected = NULL))
+      ),
+      fluidRow(column(width = 12, DTOutput("boat_table")))),
+    tabPanel("Rapid Transit EDA", 
            sidebarLayout(
              sidebarPanel(
-               selectInput("lines", "Red Line vs Orange Line:", choices = c("Northbound","Southbound"), selected = NULL)
+               selectInput("lines", "Orange Line:", choices = c("Northbound","Southbound"), selected = NULL)
                ),
              mainPanel(plotlyOutput("traveltimes_dens")))
     )
-  )
-)
+))
 
 
 
@@ -176,11 +180,53 @@ ui <- fluidPage(
 
 server <- function(input, output, session){
   # Tab:MBTA
-  output$map <- renderLeaflet({
-    # Boston view
-    leaflet() %>% setView(lng = -71.0589, lat = 42.3601, zoom = 12) %>% addTiles() %>%
-      addPolylines(red_travel_times$dept_lon,red_travel_times$dept_lat,color="red")}) # %>% 
-      # addCircleMarkers(head(red_travel_times$dept_lon),head(red_travel_times$dept_lat),radius=1)})
+  # set up api_key first
+  api_key = "AIzaSyAZZEueevQyJrIRJUregAEbUC775LEfrxg"
+   output$map <- renderLeaflet({
+     
+    t_stop1 <- reactive({
+      coor1 <- red_travel_times %>% filter(dept_name == input$Tstop1) %>% select(dept_lon,dept_lat)
+      c(coor1[1],coor1[2])
+      })
+    t_stop2 <- reactive({
+      coor2 <- red_travel_times %>% filter(dept_name == input$Tstop1) %>% select(dept_lon,dept_lat)
+      c(coor2[1],coor2[2])
+    })
+    
+     doc=mp_directions(
+       origin = t_stop1,
+       destination = t_stop2,
+       alternatives = TRUE,
+       key = appi_key,
+       quiet = T
+     )
+     # doc = mp_matrix(
+     #   origins = locations,
+     #   destinations = locations,
+     #   # transit_mode =
+     #   # arrival_time = The desired time of arrival for transit directions, as POSIXct
+     #   # departure_time =
+     #   # avoid = "ferries" or "indoor"
+     #   key = api_key,
+     #   quiet = TRUE)
+     
+     # mp_get_matrix(doc, value = "duration_text")
+     r = mp_get_routes(doc)
+     
+     library(leaflet)
+     pal = colorFactor(palette = "Dark2", domain = t$alternative_id) #pal is short for pallette
+     leaflet() %>% 
+       addProviderTiles("CartoDB.DarkMatter") %>%
+       addPolylines(data = r, opacity = 1, weight = 7, color = ~pal(alternative_id), 
+                    # input for label is from r$distance_text)
+                    label = ~distance_text,
+                    labelOptions = labelOptions(noHide = TRUE))
+    })
+   
+    # # Boston view
+    # leaflet() %>% setView(lng = -71.0589, lat = 42.3601, zoom = 12) %>% addTiles() %>%
+    #   # # addPolylines(data = red_travel_times, ~dept_lon,~dept_lat, color = "red") %>% 
+      # addCircleMarkers(data = red_travel_times, ~dept_lon,~dept_lat,radius=1) })
       # addPolylines(unique(greenb_travel_times$dept_lon)[1:5],unique(greenb_travel_times$dept_lat)[1:5],color="green")%>%
       # addCircleMarkers(unique(greenb_travel_times$dept_lon)[1:5],unique(greenb_travel_times$dept_lat)[1:5],radius=1,popup = unique(greenb_travel_times$dept_name))[1:5]}) #%>%
       # 
@@ -199,22 +245,28 @@ server <- function(input, output, session){
   
     output$intro <- renderText({
      "The app displays MBTA transit information and my exploratory analysis of it. Information used for visualization is extracted from hostrical records of MBTA services and from current google Directions API. 
-      I selected data from Novemenber 2021 to October 2o22 to explore."})
+      I selected data from Novemenber 2021 to October 2022 to explore."})
     
   # Tab bus
     
     output$bus_table <- renderDT({
-      sl_routes_traveltimes %>% filter(stop_name == input$stop_selected) %>% dplyr::select(route_id,direction_id, headway, scheduled_headway) %>% distinct(route_id,.keep_all = T)
+      sl_routes_traveltimes %>% filter(stop_name == input$bus_stop) %>% dplyr::select(route_id,direction_id, headway, scheduled, actual) 
     })
     
-  output$SLboxplot2 <- renderPlotly(
-    plot_ly(data = sl_routes_traveltimes, y=~headway, color = ~stop_name, type = "box") %>%
-      layout(title="Box plot of silver line travel times by stop", yaxis=list(title="Time",range=c(0,1000)))
-  )
- 
-  # Tab:rapid transit:
-  # subwayline <- reactive({
-  #   input$lines })
+  # output$SLboxplot2 <- renderPlotly(
+  #   plot_ly(data = sl_routes_traveltimes, y=~headway, color = ~stop_name, type = "box") %>%
+  #     layout(title="Box plot of silver line travel times by stop", yaxis=list(title="Time",range=c(0,1000)))
+  # )
+  # 
+    
+  # Tab:  Ferry
+    output$boat_table <- renderDT({
+      boat_trips_may %>% filter(stop_name == input$boat_stop) %>% dplyr::select(trip_headsign,arrival_time, departure_time, direction_destinaion)}) 
+    
+    
+   # Tab:rapid transit:
+  tdirection <- reactive({
+   input$lines })
   
   output$traveltimes_dens <- renderPlotly(
     # if (subwayline() == "Red Line"){
@@ -226,12 +278,15 @@ server <- function(input, output, session){
     # # red_s <- plot_ly(red_to_south_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %>% 
     # #   layout(title = "Southbound density plot by stop", yaxis=list(title="Density"), xaxis=list(title="SouthBound Travel Times",range = c(0,2000)))
     # }else{
-      org_n <- plot_ly(orange_to_north_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %>% 
-        layout(title = "Northbound density plot by stop", yaxis=list(title="Density"), xaxis=list(title="Northbound Travel Times",range = c(0,3000)))
-      
-      # org_s <- plot_ly(orange_to_south_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %>% 
-      #   layout(title = "Southbound density plot by stop", yaxis=list(title="Density"), xaxis=list(title="SouthBound Travel Times",range = c(0,2000)))
   
+    if(tdirection() == "Northbound"){
+    org_n <- plot_ly(orange_to_north_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %>% 
+        layout(title = "Northbound density plot by stop", yaxis=list(title="Density"), xaxis=list(title="Northbound Travel Times",range = c(0,3000)))
+    }
+    else{
+    org_s <- plot_ly(orange_to_south_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %>% 
+        layout(title = "Southbound density plot by stop", yaxis=list(title="Density"), xaxis=list(title="SouthBound Travel Times",range = c(0,2000)))
+    }
   )
   
 }
