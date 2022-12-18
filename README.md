@@ -9,7 +9,7 @@ Please download the zip file in this repo.
 
 Part2:
 
-The bus and subway transit files can be downloaded through here.
+The bus and subway transit files can be downloaded through links below.
 
 Bus:
 
