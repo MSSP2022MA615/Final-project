@@ -67,19 +67,19 @@ greene_travel_times<- read_csv("greene_travel_times.csv", show_col_types = FALSE
 mattpan_travel_times<- read_csv("mattpan_travel_times.csv", show_col_types = FALSE)
 
 red_stops <- read_csv("red_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
-orange_stops <- read_csv("orange_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
+orange_stops <- read_csv("orange_stops.csv",show_col_types = FALSE) %>% arrange(stop_lon)
 greenb_stops <- read_csv("greenb_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
 greenc_stops <- read_csv("greenc_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
-greend_stops <- read_csv("greend_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
-greene_stops <- read_csv("greene_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
+greend_stops <- read_csv("greend_stops.csv",show_col_types = FALSE) %>% arrange(stop_lon)
+greene_stops <- read_csv("greene_stops.csv",show_col_types = FALSE) %>% arrange(stop_lon)
 
 blue_stops <- read_csv("blue_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
 mattpan_stops <- read_csv("mattpan_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
 subwaystopts<- read_csv("subwaystops.csv",show_col_types = FALSE)
 
 # load data for Orange line density plot table
-orange_to_south_df <- read_csv("orange_to_south_df.csv")
-orange_to_nouth_df <- read_csv("orange_to_north_df.csv")
+orange_to_south_df <- read_csv("orange_to_south_df.csv",show_col_types = FALSE)
+orange_to_nouth_df <- read_csv("orange_to_north_df.csv",show_col_types = FALSE)
 
 
 ###########-------------------
@@ -123,7 +123,6 @@ api_key = "AIzaSyAZZEueevQyJrIRJUregAEbUC775LEfrxg"
 ################### 
 ########################## UI
 ui <- fluidPage(
-  
   navbarPage(
     "MBTA Transit Services",
     id = "main_navbar",
@@ -143,13 +142,9 @@ ui <- fluidPage(
       ,fluidRow(column(width = 12, DTOutput("boat_table")))
     ),
     tabPanel("Rapid Transit", 
-             sidebarLayout(
-               sidebarPanel(
-                 fluidRow(column(4,selectizeInput("Tstop1",label = "Origin", choices = red_stops$stop_name, selected = NULL,options = list(placeholder = 'select a T station name'))),
-                 column(4,selectizeInput("Tstop2","Destination", choices =red_stops$stop_name , selected = NULL, options = list(placeholder = 'select a T station name')))),
-                 ),
-               mainPanel(leafletOutput("subwaymap")))
-    ),
+                 fluidRow(column(6,selectizeInput("Tstop1",label = "Origin", choices = red_stops$stop_name, selected = NULL,options = list(placeholder = 'select a T station name'))),
+                 (column(6,selectizeInput("Tstop2", label = "Destination", choices =red_stops$stop_name , selected = NULL, options = list(placeholder = 'select a T station name'))))),
+               leafletOutput("subwaymap")),
     tabPanel("Rapid Transit EDA", 
              sidebarLayout(
                sidebarPanel(
@@ -157,7 +152,9 @@ ui <- fluidPage(
                ),
                mainPanel(plotlyOutput("traveltimes_dens")))
     )
-  ))
+  )
+  )
+
 
 
 
@@ -191,7 +188,7 @@ server <- function(input, output, session){
       addPolylines(data = greend_stops, lng = ~stop_lon,lat = ~stop_lat, color = "Green") %>% 
       addCircleMarkers(data = greend_stops,lng = ~stop_lon, lat = ~stop_lat,radius=2,popup = greend_stops$stop_name) %>% 
       
-      addPolylines(data = greene_stops, lng = ~stop_lon,lat = ~stop_lat, color = "green") %>% 
+      addPolylines(data = greene_stops, lng = ~stop_lon,lat = ~stop_lat, color = "Green") %>% 
       addCircleMarkers(data = greene_stops,lng = ~stop_lon, lat = ~stop_lat,radius=2,popup = greene_stops$stop_name) 
      })
   
@@ -225,13 +222,15 @@ server <- function(input, output, session){
   
   
   output$subwaymap <- renderLeaflet({
+    
+    api_key = "AIzaSyAZZEueevQyJrIRJUregAEbUC775LEfrxg"
     doc=mp_directions(
       origin = input$Tstop1,
       destination = input$Tstop2,
       mode = "transit",
       transit_mode = "subway",
       alternatives = TRUE,
-      key = appi_key,
+      key = api_key,
       quiet = T)
     r = mp_get_routes(doc)
     
@@ -255,7 +254,7 @@ server <- function(input, output, session){
       org_n <- plot_ly(orange_to_north_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %>% 
         layout(title = "Northbound density plot by stop", yaxis=list(title="Density"), xaxis=list(title="Northbound Travel Times",range = c(0,3000)))
     }
-    else{
+    else{ tdirection() == "Souththbound"
       org_s <- plot_ly(orange_to_south_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %>% 
         layout(title = "Southbound density plot by stop", yaxis=list(title="Density"), xaxis=list(title="SouthBound Travel Times",range = c(0,2000)))
     }
