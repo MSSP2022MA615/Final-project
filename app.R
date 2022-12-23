@@ -79,7 +79,7 @@ subwaystopts<- read_csv("subwaystops.csv",show_col_types = FALSE)
 
 # load data for Orange line density plot table
 orange_to_south_df <- read_csv("orange_to_south_df.csv",show_col_types = FALSE)
-orange_to_nouth_df <- read_csv("orange_to_north_df.csv",show_col_types = FALSE)
+orange_to_north_df <- read_csv("orange_to_north_df.csv",show_col_types = FALSE)
 
 
 ###########-------------------
@@ -145,7 +145,7 @@ ui <- fluidPage(
                  fluidRow(column(6,selectizeInput("Tstop1",label = "Origin", choices = red_stops$stop_name, selected = NULL,options = list(placeholder = 'select a T station name'))),
                  (column(6,selectizeInput("Tstop2", label = "Destination", choices =red_stops$stop_name , selected = NULL, options = list(placeholder = 'select a T station name'))))),
                leafletOutput("subwaymap")),
-    tabPanel("Rapid Transit EDA", 
+    tabPanel("EDA", 
              sidebarLayout(
                sidebarPanel(
                  selectInput("lines", "Orange Line:", choices = c("Northbound","Southbound"), selected = NULL)
@@ -154,7 +154,6 @@ ui <- fluidPage(
     )
   )
   )
-
 
 
 
