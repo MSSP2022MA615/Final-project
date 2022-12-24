@@ -67,15 +67,20 @@ greene_travel_times<- read_csv("greene_travel_times.csv", show_col_types = FALSE
 mattpan_travel_times<- read_csv("mattpan_travel_times.csv", show_col_types = FALSE)
 
 red_stops <- read_csv("red_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
-orange_stops <- read_csv("orange_stops.csv",show_col_types = FALSE) %>% arrange(stop_lon)
-greenb_stops <- read_csv("greenb_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
+orange_stops <- read_csv("orange_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat )
+greenb_stops <- read_csv("greenb_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat) 
 greenc_stops <- read_csv("greenc_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
-greend_stops <- read_csv("greend_stops.csv",show_col_types = FALSE) %>% arrange(stop_lon)
-greene_stops <- read_csv("greene_stops.csv",show_col_types = FALSE) %>% arrange(stop_lon)
+greend_stops <- read_csv("greend_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
+greene_stops <- read_csv("greene_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
+
+
 
 blue_stops <- read_csv("blue_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
 mattpan_stops <- read_csv("mattpan_stops.csv",show_col_types = FALSE) %>% arrange(stop_lat)
 subwaystopts<- read_csv("subwaystops.csv",show_col_types = FALSE)
+
+
+
 
 # load data for Orange line density plot table
 orange_to_south_df <- read_csv("orange_to_south_df.csv",show_col_types = FALSE)
@@ -109,12 +114,12 @@ orange_to_north_df <- read_csv("orange_to_north_df.csv",show_col_types = FALSE)
 ##D   mode = "transit",
 ##D   transit_mode = 
 ##D   key = key
-##D )
+
 ##D mp_get_matrix(doc, value = "distance_m")
 ##D mp_get_matrix(doc, value = "distance_text")
 ##D mp_get_matrix(doc, value = "duration_s")
 ##D mp_get_matrix(doc, value = "duration_text")
-##D 
+
 
 
 # # set up api_key first
@@ -125,7 +130,6 @@ api_key = "AIzaSyAZZEueevQyJrIRJUregAEbUC775LEfrxg"
 ui <- fluidPage(
   navbarPage(
     "MBTA Transit Services",
-    id = "main_navbar",
     theme = "cosmo",
     tabPanel("MBTA", leafletOutput("map"),textOutput("intro"),height = 700)
     ,
@@ -142,8 +146,8 @@ ui <- fluidPage(
       ,fluidRow(column(width = 12, DTOutput("boat_table")))
     ),
     tabPanel("Rapid Transit", 
-                 fluidRow(column(6,selectizeInput("Tstop1",label = "Origin", choices = red_stops$stop_name, selected = NULL,options = list(placeholder = 'select a T station name'))),
-                 (column(6,selectizeInput("Tstop2", label = "Destination", choices =red_stops$stop_name , selected = NULL, options = list(placeholder = 'select a T station name'))))),
+                 fluidRow(column(6,selectInput("Tstop1",label = "Origin", choices = subwaystopts$stop_name, selected = NULL)),
+                 (column(6,selectInput("Tstop2", label = "Destination", choices =subwaystopts$stop_name, selected = NULL)))),
                leafletOutput("subwaymap")),
     tabPanel("EDA", 
              sidebarLayout(
@@ -215,8 +219,12 @@ server <- function(input, output, session){
   # Tab:rapid transit 
   
 
-  updateSelectizeInput(session, 'Tstop1', choices = red_stops$stop_name, server = TRUE)
-  updateSelectizeInput(session, 'Tstop2', choices = red_stops$stop_name, server = TRUE)
+  
+  Tstop1 <- reactive({
+    input$Tstop1 })
+  
+  Tstop2 <- reactive({
+    input$Tstop2 })
   
   
   
@@ -224,16 +232,17 @@ server <- function(input, output, session){
     
     api_key = "AIzaSyAZZEueevQyJrIRJUregAEbUC775LEfrxg"
     doc=mp_directions(
-      origin = input$Tstop1,
-      destination = input$Tstop2,
+      origin = Tstop1(),
+      destination = Tstop2(),
       mode = "transit",
       transit_mode = "subway",
       alternatives = TRUE,
       key = api_key,
       quiet = T)
+    
     r = mp_get_routes(doc)
     
-    pal = colorFactor(palette = "Dark2", domain = t$alternative_id) 
+    pal = colorFactor(palette = "Dark2", domain = r$alternative_id) 
     
     leaflet() %>%
       addProviderTiles("CartoDB.Positron") %>%
@@ -243,7 +252,7 @@ server <- function(input, output, session){
                    labelOptions = labelOptions(noHide = TRUE))
   })
   
-  # Tab:rapid transit EDA
+  # Tab:EDA
   tdirection <- reactive({
     input$lines })
   
