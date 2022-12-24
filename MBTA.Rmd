@@ -490,7 +490,7 @@ plot_ly(orange_to_south_df, x = ~x, y = ~y, color = ~dept_name)%>% add_lines() %
 
 Below is a summary of findings on the travel times and headways for bus and subway:
 
--   Bus: Among all silver lines, SL5 has a lower headways than other silver line buses. So it is more likely for SL5 to
+-   Bus: Among all silver lines, SL5 has a lower headways than other silver line buses. 
 
 -   Rapid transit: Red line has a longer travel time than orange line. This may be attributed to red line usually have longer distances between stops.
 
